@@ -1,0 +1,52 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "constellation-vision"
+version = "0.1.0"
+description = "From-scratch compact UNet for semantic segmentation of surface defects on synthetic orbital-hardware frames, with a held-out mean-IoU eval and an ONNX argus enrichment step."
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+# Core install covers the synthetic data generator, the metrics, the report
+# writer, and the enrichment postprocessing (CPU, no ML stack).
+dependencies = [
+    "numpy>=1.26",
+]
+
+[project.optional-dependencies]
+# The from-scratch training + ONNX export stack (CPU is fine).
+train = [
+    "torch>=2.3",
+    "onnx>=1.16",
+    "onnxruntime>=1.18",
+]
+# Loading and running the exported ONNX model (enrichment / inference only).
+onnx = ["onnxruntime>=1.18"]
+dev = ["pytest>=8.0", "pytest-cov>=5.0"]
+
+[project.scripts]
+constellation-data = "constellation_vision.data.generate:main"
+constellation-train = "constellation_vision.train:main"
+constellation-eval = "constellation_vision.eval.harness:main"
+constellation-export = "constellation_vision.model.export_onnx:main"
+constellation-enrich = "constellation_vision.enrich.argus_enrich:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
+
+[tool.coverage.run]
+source = ["constellation_vision"]
+# torch / onnxruntime entrypoints are exercised by `make train` (and a CI job
+# that installs the train stack), not by the core unit-test coverage floor.
+omit = [
+    "*/train.py",
+    "*/model/unet.py",
+    "*/model/export_onnx.py",
+    "*/eval/harness.py",
+]
