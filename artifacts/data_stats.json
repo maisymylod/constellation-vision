@@ -1,0 +1,14 @@
+{
+  "frame_size": 96,
+  "n_train": 480,
+  "n_test": 160,
+  "train_mean_intensity": 0.601858,
+  "train_std_intensity": 0.117545,
+  "class_pixel_fraction": {
+    "background": 0.932404,
+    "crack": 0.004474,
+    "hot_spot": 0.02644,
+    "delamination": 0.035963,
+    "missing_fastener": 0.000719
+  }
+}
