@@ -1,0 +1,61 @@
+name: continuous-improvement
+
+# Nightly loop: regenerate data, drift-check it, retrain the segmenter from
+# scratch, and evaluate on the held-out split. The new eval report + checkpoint
+# metadata are committed ONLY IF mean IoU genuinely improved over the committed
+# number, with a commit message stating the real delta. If it did not improve
+# (or only changed cosmetically), nothing is committed. Commits use the
+# pipeline's own bot identity, never an empty or cosmetic commit.
+
+on:
+  schedule:
+    - cron: "23 4 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  improve:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install training stack
+        run: pip install -e ".[train,dev]"
+
+      - name: Read the currently committed mean IoU
+        id: baseline
+        run: |
+          BASE=$(python -c "from constellation_vision.eval.report import load_committed_mean_iou as f; v=f(); print(v if v is not None else 0.0)")
+          echo "mean_iou=$BASE" >> "$GITHUB_OUTPUT"
+          echo "committed mean IoU: $BASE"
+
+      - name: Regenerate data + drift check
+        run: |
+          python -m constellation_vision.data.generate
+          python -m constellation_vision.data.drift
+
+      - name: Retrain from scratch + evaluate
+        run: python -m constellation_vision.train
+
+      - name: Commit only if mean IoU improved
+        env:
+          BASELINE: ${{ steps.baseline.outputs.mean_iou }}
+        run: |
+          NEW=$(python -c "import json;print(json.load(open('artifacts/metrics.json'))['mean_iou'])")
+          DELTA=$(python -c "print(f'{float('$NEW') - float('$BASELINE'):+.4f}')")
+          echo "baseline=$BASELINE new=$NEW delta=$DELTA"
+          IMPROVED=$(python -c "print(1 if float('$NEW') > float('$BASELINE') + 1e-6 else 0)")
+          if [ "$IMPROVED" != "1" ]; then
+            echo "no improvement ($DELTA); committing nothing"
+            exit 0
+          fi
+          git config user.name "heliosnet-ci[bot]"
+          git config user.email "heliosnet-ci[bot]@users.noreply.github.com"
+          git add artifacts/EVAL.md artifacts/metrics.json artifacts/history.jsonl \
+                  src/constellation_vision/model/weights/segmenter.onnx
+          git commit -m "ci: mean IoU improved ${DELTA} (now ${NEW}) on held-out split"
+          git push
