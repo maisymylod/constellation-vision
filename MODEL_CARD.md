@@ -53,16 +53,16 @@ These are not model results. They prove the metric measures segmentation quality
 
 | Metric | Value |
 |---|---|
-| Mean IoU (defect classes) | **0.8774** |
-| Pixel accuracy | 0.9920 |
+| Mean IoU (defect classes) | **0.8821** |
+| Pixel accuracy | 0.9921 |
 
 | Class | IoU |
 |---|---|
-| background | 0.9943 |
-| crack | 0.9132 |
-| hot_spot | 0.7503 |
-| delamination | 0.9083 |
-| missing_fastener | 0.9378 |
+| background | 0.9946 |
+| crack | 0.9164 |
+| hot_spot | 0.7579 |
+| delamination | 0.9024 |
+| missing_fastener | 0.9515 |
 
 Run: seed 42, 16 epochs, batch 16, lr 1e-3, base width 16. See
 [artifacts/EVAL.md](artifacts/EVAL.md) for the confusion matrix.

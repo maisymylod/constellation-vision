@@ -24,6 +24,9 @@ train = [
 ]
 # Loading and running the exported ONNX model (enrichment / inference only).
 onnx = ["onnxruntime>=1.18"]
+# Regenerate the headline from a clean clone: run the committed segmenter.onnx
+# (onnxruntime) and read its parameter count from the graph (onnx). No torch.
+eval = ["onnx>=1.16", "onnxruntime>=1.18"]
 dev = ["pytest>=8.0", "pytest-cov>=5.0"]
 
 [project.scripts]

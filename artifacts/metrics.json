@@ -17,7 +17,7 @@
     "epochs": 16,
     "batch_size": 16,
     "lr": 0.001,
-    "num_parameters": 117141,
-    "generated_at": "2026-06-24T05:50:51Z"
+    "num_parameters": 116821,
+    "generated_at": "2026-07-23T14:12:03Z"
   }
 }
