@@ -98,8 +98,11 @@ def train(epochs: int = config.EPOCHS) -> dict:
 
     export(model)
 
-    # Evaluate on the held-out split and write artifacts/EVAL.md.
-    metrics = harness.evaluate(model=model, append_history=True)
+    # Evaluate the exported ONNX model (not the in-memory torch model) on the
+    # held-out split and write artifacts/EVAL.md. Evaluating what actually ships
+    # makes `make train` and `make eval` report identical numbers, so the headline
+    # regenerates from a clean clone via `make eval` alone.
+    metrics = harness.evaluate(model=None, append_history=True)
     print(f"\nmean IoU (defect classes): {metrics['mean_iou']:.4f}")
     for name, v in metrics["per_class_iou"].items():
         print(f"  {name:18s}: {'n/a' if v is None else f'{v:.4f}'}")

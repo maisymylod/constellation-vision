@@ -1,4 +1,4 @@
-.PHONY: help install install-train data train eval export enrich drift test clean
+.PHONY: help install install-train install-eval data train eval export enrich drift test clean
 
 PY ?= python
 
@@ -12,13 +12,16 @@ install: ## Install core + dev (CPU; covers data synthesis, metrics, enrichment,
 install-train: ## Install the from-scratch training + ONNX stack (torch, onnx, onnxruntime)
 	$(PY) -m pip install -e ".[train,dev]"
 
+install-eval: ## Install the ONNX eval stack (onnx + onnxruntime, no torch) to run make eval
+	$(PY) -m pip install -e ".[eval,dev]"
+
 data: ## Generate the train/test frame splits deterministically
 	$(PY) -m constellation_vision.data.generate
 
 train: ## Train the UNet-lite from scratch, export ONNX, evaluate, write artifacts/EVAL.md
 	$(PY) -m constellation_vision.train
 
-eval: ## Evaluate the committed checkpoint on the held-out split -> artifacts/EVAL.md
+eval: ## Evaluate the committed segmenter.onnx on the held-out split -> artifacts/EVAL.md
 	$(PY) -m constellation_vision.eval.harness
 
 export: ## Export the trained checkpoint to ONNX
